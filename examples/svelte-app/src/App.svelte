@@ -1,38 +1,42 @@
 <script lang="ts">
-  import Greet from './lib/Greet.svelte'
-	import { execute } from 'tauri-plugin-comm-api'
-	import { invoke } from '@tauri-apps/api'
+	import { connect, disconnect, sendAndReceive } from 'tauri-plugin-comm-api'
 
-	let response = ''
+  let request = "";
+  let response = "";
 
-	function updateResponse(returnValue) {
-    console.log(returnValue);
-		response += `[${new Date().toLocaleTimeString()}]` + (typeof returnValue === 'string' ? returnValue : JSON.stringify(returnValue)) + '<br>'
-	}
+  const _connect = () => {
+    connect()
+      .catch(e => console.log(e));
+  }
 
-	async function _execute() {
-		execute().then(updateResponse).catch(updateResponse)
-    let a = await invoke('plugin:comm|execute')
-		console.log(a);
+  const _disconnect = () => {
+    disconnect()
+      .catch(e => console.log(e));
+  }
 
-	}
+  const _sendAndReceive = () => {
+    sendAndReceive(request)
+      .then(res => {
+        response = res;
+      })
+      .catch(err => {
+        response = err;
+        console.log(err);
+      });
+  }
+
 </script>
 
 <main class="container">
 
 <div>
-	<button on:click="{_execute}">Execute</button>
-	<div>{@html response}</div>
+	<button on:click="{_connect}">connect</button>
+	<button on:click="{_disconnect}">disconnect</button>
+  <form on:submit|preventDefault={_sendAndReceive}>
+      <input type="text" bind:value={request} placeholder="request">
+      <button type="submit">sendAndReceive</button>
+      <p>response: {response}</p>
+  </form>
 </div>
 
 </main>
-
-<style>
-  .logo.vite:hover {
-    filter: drop-shadow(0 0 2em #747bff);
-  }
-
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00);
-  }
-</style>
