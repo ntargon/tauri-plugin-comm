@@ -1,13 +1,15 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-	import { connect, disconnect, sendAndReceive } from 'tauri-plugin-comm-api'
+	import { connectTimeout, disconnect, sendAndReceive } from 'tauri-plugin-comm-api'
 
   let request = "";
   let response = "";
   let isConnected = false;
+  let addr = "";
+  const TIMEOUT_MS = 1000;
 
   const _connect = () => {
-    connect()
+    connectTimeout(addr, TIMEOUT_MS)
       .then(() => {
         isConnected = true;
       })
@@ -30,6 +32,7 @@
       .catch(err => {
         response = err;
         console.log(err);
+        isConnected = false;
       });
   }
 
@@ -41,8 +44,13 @@
 <main class="container">
 
 <div>
-	<button on:click="{_connect}" disabled='{isConnected}'>connect</button>
+  <form on:submit|preventDefault={_connect}>
+      <input type="text" bind:value={addr} placeholder="127.0.0.1:5555" disabled='{isConnected}'>
+      <button type="submit" disabled='{isConnected}'>connect</button>
+  </form>
+
 	<button on:click="{_disconnect}" disabled='{!isConnected}'>disconnect</button>
+
   <form on:submit|preventDefault={_sendAndReceive}>
       <input type="text" bind:value={request} placeholder="request" disabled='{!isConnected}'>
       <button type="submit" disabled='{!isConnected}'>sendAndReceive</button>
